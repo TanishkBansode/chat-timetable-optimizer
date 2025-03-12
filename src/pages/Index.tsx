@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import TimetableView from '../components/TimetableView';
@@ -14,6 +13,7 @@ import {
 import { processConstraintWithGemini, createConstraintFromText } from '../lib/geminiApi';
 import { Calendar, MessageSquare, List } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 
 const Index: React.FC = () => {
   // State
@@ -22,6 +22,7 @@ const Index: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'constraints' | 'chat'>('chat');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
   
   // Initialize with sample data
@@ -138,9 +139,22 @@ const Index: React.FC = () => {
               <Calendar className="h-5 w-5 mr-2 text-primary" />
               Your Timetable
             </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              Settings
+            </Button>
           </div>
           
-          <TimetableView schedule={schedule} />
+          {showSettings ? (
+            <div className="bg-card p-4 rounded-lg shadow-sm">
+              <ApiKeySettings />
+            </div>
+          ) : (
+            <TimetableView schedule={schedule} />
+          )}
         </section>
         
         {/* Chat & Constraints Section */}
