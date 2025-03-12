@@ -21,12 +21,26 @@ export type TimeSlot =
   | '9:00' | '10:00' | '11:00' | '12:00' 
   | '13:00' | '14:00' | '15:00' | '16:00' | '17:00';
 
+export interface Class {
+  id: string;
+  name: string;
+  subjects: string[];
+}
+
+export interface Teacher {
+  id: string;
+  name: string;
+  subjects: string[];
+}
+
 export interface ScheduleItem {
   id: string;
   subject: string;
   day: Day;
   timeSlot: TimeSlot;
   color?: string;
+  className?: string;
+  teacherName?: string;
 }
 
 export type Schedule = ScheduleItem[];

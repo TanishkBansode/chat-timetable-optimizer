@@ -9,10 +9,11 @@ import {
   generateId, 
   generateSampleSchedule, 
   processConstraint,
-  getChatbotResponse,
   detectConstraintType
 } from '../lib/timetableUtils';
+import { processConstraintWithGemini, createConstraintFromText } from '../lib/geminiApi';
 import { Calendar, MessageSquare, List } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 const Index: React.FC = () => {
   // State
@@ -20,6 +21,8 @@ const Index: React.FC = () => {
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'constraints' | 'chat'>('chat');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
   
   // Initialize with sample data
   useEffect(() => {
@@ -38,7 +41,7 @@ const Index: React.FC = () => {
   }, []);
   
   // Handle sending a message
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     // Add user message
     const userMessage: Message = {
       id: generateId(),
@@ -49,30 +52,57 @@ const Index: React.FC = () => {
     
     setMessages(prev => [...prev, userMessage]);
     
-    // Process as a constraint if applicable
-    const newConstraint: Constraint = {
-      id: generateId(),
-      text,
-      type: detectConstraintType(text),
-      timestamp: new Date()
-    };
+    // Show processing indicator
+    setIsProcessing(true);
     
-    setConstraints(prev => [...prev, newConstraint]);
-    
-    // Update schedule based on the new constraint
-    setSchedule(prev => processConstraint(newConstraint, prev));
-    
-    // Add system response with slight delay to feel more natural
-    setTimeout(() => {
+    try {
+      // Process the constraint with Gemini API
+      const { processedSchedule, response } = await processConstraintWithGemini(text, schedule);
+      
+      // Add the constraint
+      const newConstraint = createConstraintFromText(text);
+      setConstraints(prev => [...prev, newConstraint]);
+      
+      // Update the schedule
+      setSchedule(processedSchedule);
+      
+      // Add system response
       const systemResponse: Message = {
         id: generateId(),
-        text: getChatbotResponse(text),
+        text: response,
         sender: 'system',
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, systemResponse]);
-    }, 800);
+      
+      // Show toast notification
+      toast({
+        title: "Constraint processed",
+        description: "Your timetable has been updated.",
+      });
+    } catch (error) {
+      console.error('Error processing constraint:', error);
+      
+      // Add error message
+      const errorMessage: Message = {
+        id: generateId(),
+        text: "I'm sorry, I couldn't process that constraint. Please try again with different wording.",
+        sender: 'system',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "Failed to process your constraint.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   // Handle removing a constraint
@@ -88,6 +118,12 @@ const Index: React.FC = () => {
     };
     
     setMessages(prev => [...prev, systemMessage]);
+    
+    // Show toast notification
+    toast({
+      title: "Constraint removed",
+      description: "Your timetable has been updated.",
+    });
   };
   
   return (
@@ -141,7 +177,8 @@ const Index: React.FC = () => {
             {activeTab === 'chat' ? (
               <ChatInterface 
                 messages={messages} 
-                onSendMessage={handleSendMessage} 
+                onSendMessage={handleSendMessage}
+                isProcessing={isProcessing}
               />
             ) : (
               <div className="p-4 h-full overflow-y-auto">

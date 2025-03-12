@@ -1,5 +1,5 @@
 
-import { Constraint, Schedule, ScheduleItem, Day, TimeSlot } from './types';
+import { Constraint, Schedule, ScheduleItem, Day, TimeSlot, Class, Teacher } from './types';
 
 export const DAYS: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 export const TIME_SLOTS: TimeSlot[] = ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
@@ -15,6 +15,23 @@ export const SUBJECTS = [
   'Physical Education',
   'Art',
   'Music'
+];
+
+// Sample classes
+export const CLASSES: Class[] = [
+  { id: '1', name: 'Class 10A', subjects: SUBJECTS },
+  { id: '2', name: 'Class 10B', subjects: SUBJECTS },
+  { id: '3', name: 'Class 11A', subjects: SUBJECTS.slice(0, 8) },
+  { id: '4', name: 'Class 11B', subjects: SUBJECTS.slice(0, 8) },
+];
+
+// Sample teachers
+export const TEACHERS: Teacher[] = [
+  { id: '1', name: 'Dr. Smith', subjects: ['Mathematics', 'Physics'] },
+  { id: '2', name: 'Prof. Johnson', subjects: ['Chemistry', 'Biology'] },
+  { id: '3', name: 'Mr. Brown', subjects: ['History', 'Literature'] },
+  { id: '4', name: 'Ms. Davis', subjects: ['Computer Science'] },
+  { id: '5', name: 'Mrs. Wilson', subjects: ['Physical Education', 'Art', 'Music'] },
 ];
 
 // Generate a unique ID for items
@@ -36,44 +53,90 @@ export const SUBJECT_COLORS: Record<string, string> = {
   'Music': 'rgba(168, 190, 226, 0.8)'
 };
 
-// Generate an initial sample schedule
+// Find suitable teacher for a subject
+export const findTeacherForSubject = (subject: string): string => {
+  const teacher = TEACHERS.find(t => t.subjects.includes(subject));
+  return teacher ? teacher.name : 'Unassigned';
+};
+
+// Generate an initial sample schedule with classes and teachers
 export const generateSampleSchedule = (): Schedule => {
   const schedule: Schedule = [];
   
-  // Add a few random classes
-  SUBJECTS.slice(0, 6).forEach(subject => {
-    const randomDay = DAYS[Math.floor(Math.random() * DAYS.length)];
-    const randomTimeSlot = TIME_SLOTS[Math.floor(Math.random() * (TIME_SLOTS.length - 1))];
-    
-    schedule.push({
-      id: generateId(),
-      subject,
-      day: randomDay,
-      timeSlot: randomTimeSlot,
-      color: SUBJECT_COLORS[subject]
+  // Add classes for each class group
+  CLASSES.forEach(classGroup => {
+    // Add a few subjects for each class
+    const classSubjects = classGroup.subjects.slice(0, 4);
+    classSubjects.forEach(subject => {
+      const randomDay = DAYS[Math.floor(Math.random() * DAYS.length)];
+      const randomTimeSlot = TIME_SLOTS[Math.floor(Math.random() * (TIME_SLOTS.length - 1))];
+      
+      if (isTimeSlotAvailable(schedule, randomDay, randomTimeSlot, classGroup.name)) {
+        schedule.push({
+          id: generateId(),
+          subject,
+          day: randomDay,
+          timeSlot: randomTimeSlot,
+          color: SUBJECT_COLORS[subject],
+          className: classGroup.name,
+          teacherName: findTeacherForSubject(subject)
+        });
+      }
     });
   });
   
   return schedule;
 };
 
-// Process a constraint and update the schedule accordingly (simplified version)
+// Process a constraint and update the schedule using Gemini API
 export const processConstraint = (constraint: Constraint, currentSchedule: Schedule): Schedule => {
-  // In a real implementation, this would have complex logic to interpret and apply constraints
-  // For this demo, we'll just return the current schedule
-  
-  console.log(`Processing constraint: ${constraint.text}`);
+  // In a real implementation, this would call the Gemini API
+  // For now, we'll log the constraint and return the current schedule
+  console.log(`Processing constraint: ${constraint.text} (${constraint.type})`);
   return currentSchedule;
 };
 
-// Check if a time slot is available in the schedule
-export const isTimeSlotAvailable = (schedule: Schedule, day: Day, timeSlot: TimeSlot): boolean => {
+// Check if a time slot is available for a specific class
+export const isTimeSlotAvailable = (
+  schedule: Schedule, 
+  day: Day, 
+  timeSlot: TimeSlot,
+  className?: string
+): boolean => {
+  if (className) {
+    return !schedule.some(item => 
+      item.day === day && 
+      item.timeSlot === timeSlot && 
+      item.className === className
+    );
+  }
   return !schedule.some(item => item.day === day && item.timeSlot === timeSlot);
 };
 
 // Get a schedule item at a specific day and time slot if it exists
-export const getScheduleItem = (schedule: Schedule, day: Day, timeSlot: TimeSlot): ScheduleItem | undefined => {
+export const getScheduleItem = (
+  schedule: Schedule, 
+  day: Day, 
+  timeSlot: TimeSlot,
+  className?: string
+): ScheduleItem | undefined => {
+  if (className) {
+    return schedule.find(item => 
+      item.day === day && 
+      item.timeSlot === timeSlot && 
+      item.className === className
+    );
+  }
   return schedule.find(item => item.day === day && item.timeSlot === timeSlot);
+};
+
+// Get all schedule items for a specific day and time slot
+export const getScheduleItems = (
+  schedule: Schedule,
+  day: Day,
+  timeSlot: TimeSlot
+): ScheduleItem[] => {
+  return schedule.filter(item => item.day === day && item.timeSlot === timeSlot);
 };
 
 // Add a new subject to the schedule
@@ -81,16 +144,19 @@ export const addSubjectToSchedule = (
   schedule: Schedule, 
   subject: string, 
   day: Day, 
-  timeSlot: TimeSlot
+  timeSlot: TimeSlot,
+  className: string
 ): Schedule => {
-  // Check if the slot is available
-  if (isTimeSlotAvailable(schedule, day, timeSlot)) {
+  // Check if the slot is available for this class
+  if (isTimeSlotAvailable(schedule, day, timeSlot, className)) {
     const newItem: ScheduleItem = {
       id: generateId(),
       subject,
       day,
       timeSlot,
-      color: SUBJECT_COLORS[subject] || 'rgba(200, 200, 200, 0.8)'
+      color: SUBJECT_COLORS[subject] || 'rgba(200, 200, 200, 0.8)',
+      className,
+      teacherName: findTeacherForSubject(subject)
     };
     
     return [...schedule, newItem];

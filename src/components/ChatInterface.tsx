@@ -1,22 +1,24 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Message } from '../lib/types';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 
 interface ChatInterfaceProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
+  isProcessing?: boolean;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   messages,
-  onSendMessage
+  onSendMessage,
+  isProcessing = false
 }) => {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const handleSendMessage = () => {
-    if (inputText.trim()) {
+    if (inputText.trim() && !isProcessing) {
       onSendMessage(inputText);
       setInputText('');
     }
@@ -49,6 +51,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               {message.text}
             </div>
           ))}
+          
+          {isProcessing && (
+            <div className="system-message flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Processing your request...</span>
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -62,16 +72,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onKeyDown={handleKeyDown}
             placeholder="Type your scheduling constraint..."
             className="w-full py-2 px-4 bg-secondary/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300"
+            disabled={isProcessing}
           />
           <button
             onClick={handleSendMessage}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || isProcessing}
             className={`p-2 rounded-full bg-primary text-white transform transition-all duration-300 ${
-              inputText.trim() ? 'opacity-100 translate-x-0' : 'opacity-70 translate-x-2'
+              inputText.trim() && !isProcessing ? 'opacity-100 translate-x-0' : 'opacity-70 translate-x-2'
             }`}
             aria-label="Send message"
           >
-            <Send size={18} />
+            {isProcessing ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
           </button>
         </div>
       </div>
