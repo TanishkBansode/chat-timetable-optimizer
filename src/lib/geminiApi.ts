@@ -22,8 +22,9 @@ export const processConstraintWithGemini = async (
   console.log('Processing with Gemini API:', constraintText);
   
   try {
+    // Updated to use gemini-2.0-flash model instead of gemini-pro
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
