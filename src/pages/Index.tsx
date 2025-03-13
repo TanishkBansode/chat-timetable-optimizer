@@ -15,7 +15,7 @@ import {
 } from '../lib/timetableUtils';
 import { processConstraintWithGemini, createConstraintFromText } from '../lib/geminiApi';
 import { Calendar, MessageSquare, List } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
 const Index: React.FC = () => {
@@ -73,7 +73,7 @@ const Index: React.FC = () => {
       // Add system response
       const systemResponse: Message = {
         id: generateId(),
-        text: response,
+        text: response || "I've updated your schedule based on your constraint.",
         sender: 'system',
         timestamp: new Date()
       };
@@ -88,10 +88,12 @@ const Index: React.FC = () => {
     } catch (error) {
       console.error('Error processing constraint:', error);
       
-      // Add error message
+      // Check if error is related to missing API key
       const errorMessage: Message = {
         id: generateId(),
-        text: "I'm sorry, I couldn't process that constraint. Please try again with different wording.",
+        text: error.message?.includes('API key') 
+          ? "You need to set your Gemini API key in the settings first. Click the Settings button above the timetable." 
+          : "I couldn't process that constraint. There might be an issue with the Gemini API connection. Please check your API key or try again later.",
         sender: 'system',
         timestamp: new Date()
       };
@@ -101,7 +103,9 @@ const Index: React.FC = () => {
       // Show error toast
       toast({
         title: "Error",
-        description: "Failed to process your constraint.",
+        description: error.message?.includes('API key') 
+          ? "Please set your Gemini API key in settings" 
+          : "Failed to process your constraint",
         variant: "destructive"
       });
     } finally {
