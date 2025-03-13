@@ -4,7 +4,8 @@ import Header from '../components/Header';
 import TimetableView from '../components/TimetableView';
 import ConstraintList from '../components/ConstraintList';
 import ChatInterface from '../components/ChatInterface';
-import ApiKeySettings from '@/components/ApiKeySettings';
+import { ApiKeySettings } from '@/components/ApiKeySettings';
+import TeacherList from '../components/TeacherList';
 import { Constraint, Message, Schedule } from '../lib/types';
 import { 
   generateId, 
