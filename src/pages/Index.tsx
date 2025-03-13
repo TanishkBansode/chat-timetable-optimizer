@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import TimetableView from '../components/TimetableView';
 import ConstraintList from '../components/ConstraintList';
 import ChatInterface from '../components/ChatInterface';
-import ApiKeySettings from '../components/ApiKeySettings'; // Add this line
+import ApiKeySettings from '@/components/ApiKeySettings';
 import { Constraint, Message, Schedule } from '../lib/types';
 import { 
   generateId, 

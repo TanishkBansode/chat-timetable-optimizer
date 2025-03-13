@@ -1,7 +1,7 @@
 
 import { Schedule, Day, TimeSlot, ScheduleItem } from './types';
-import { SUBJECT_COLORS, TEACHERS } from './constants';
-import { generateId } from './utils';
+import { SUBJECT_COLORS, TEACHERS, CLASSES, DAYS, TIME_SLOTS } from './constants';
+import { generateId } from './timetableUtils';
 
 // Find suitable teacher for a subject
 export const findTeacherForSubject = (subject: string): string => {
