@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Message } from '../lib/types';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -34,6 +35,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const exampleConstraints = [
+    "No Chemistry classes",
+    "The Biology teacher's name is Prof. Johnny",
+    "Math only in the morning",
+    "No classes on Friday afternoon"
+  ];
   
   return (
     <div className="flex flex-col h-full">
@@ -74,6 +82,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             className="w-full py-2 px-4 bg-secondary/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300"
             disabled={isProcessing}
           />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button 
+                  className="absolute right-14 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Example constraints"
+                >
+                  <HelpCircle size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="font-medium mb-2">Example constraints:</p>
+                <ul className="text-xs space-y-1">
+                  {exampleConstraints.map((example, i) => (
+                    <li key={i} className="cursor-pointer hover:text-primary" 
+                        onClick={() => {
+                          setInputText(example);
+                        }}>
+                      • {example}
+                    </li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <button
             onClick={handleSendMessage}
             disabled={!inputText.trim() || isProcessing}
