@@ -1,6 +1,6 @@
 
 import { Schedule, Day, TimeSlot, ScheduleItem } from './types';
-import { SUBJECT_COLORS, TEACHERS, CLASSES, DAYS, TIME_SLOTS } from './constants';
+import { SUBJECT_COLORS, TEACHERS, CLASSES, DAYS, TIME_SLOTS } from './timetableUtils';
 import { generateId } from './timetableUtils';
 
 // Find suitable teacher for a subject

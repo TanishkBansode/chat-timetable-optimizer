@@ -22,49 +22,24 @@ export const processConstraintWithGemini = async (
   console.log('Processing with Gemini API:', constraintText);
   
   try {
-    // Create a prompt that instructs Gemini to return a structured response
+    // Create a prompt that instructs Gemini to analyze and modify the schedule
     const prompt = `
 You are a school timetable assistant. Analyze this constraint: "${constraintText}"
 
 Current schedule:
 ${JSON.stringify(currentSchedule, null, 2)}
 
-Return a JSON response with these fields:
-1. "explanation": Brief explanation of how you'll modify the schedule
-2. "action": One of ["remove_subject", "add_subject", "change_time", "change_teacher", "no_change"]
-3. "details": Object with details specific to the action type
+Please return a JSON response with:
+1. An "explanation" of what changes you'll make
+2. The complete "updatedSchedule" array with all necessary modifications applied
 
-Example response formats:
-For removing subjects:
-{
-  "explanation": "Removing all Chemistry classes as requested",
-  "action": "remove_subject",
-  "details": {
-    "subjects": ["Chemistry"]
-  }
-}
+Your response should be a valid JSON object containing both these fields. The "updatedSchedule" should be the complete, modified version of the schedule with all changes applied based on the constraint.
 
-For changing teacher:
-{
-  "explanation": "Updating Biology teacher to Prof. Johnny",
-  "action": "change_teacher",
-  "details": {
-    "subject": "Biology",
-    "teacherName": "Prof. Johnny"
-  }
-}
+For example, if asked to change a teacher's name, update all relevant entries in the schedule.
+If asked to remove a subject, filter out those entries.
+If asked to change time slots, move the relevant entries to appropriate time slots.
 
-For time constraints:
-{
-  "explanation": "Moving Math classes to morning slots only",
-  "action": "change_time",
-  "details": {
-    "subject": "Mathematics",
-    "allowedTimeSlots": ["9:00", "10:00", "11:00"]
-  }
-}
-
-Analyze the constraint and return the appropriate structured response.
+Return the complete modified schedule as a JSON array. Don't just describe the changes - actually make them.
 `;
 
     const response = await fetch(
@@ -82,7 +57,7 @@ Analyze the constraint and return the appropriate structured response.
             temperature: 0.1,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
           }
         })
       }
@@ -96,9 +71,8 @@ Analyze the constraint and return the appropriate structured response.
 
     const data = await response.json();
     
-    // Extract the AI response text
     let aiResponse = '';
-    let structuredResponse = null;
+    let updatedSchedule = [...currentSchedule];
     
     if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
       if (data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
@@ -112,11 +86,20 @@ Analyze the constraint and return the appropriate structured response.
                            aiResponse.match(/(\{[\s\S]*\})/);
                            
           const jsonString = jsonMatch ? jsonMatch[1] : aiResponse;
-          structuredResponse = JSON.parse(jsonString.trim());
-          console.log('Parsed structured response:', structuredResponse);
+          const parsedResponse = JSON.parse(jsonString.trim());
+          
+          console.log('Parsed Gemini response:', parsedResponse);
+          
+          if (parsedResponse.updatedSchedule && Array.isArray(parsedResponse.updatedSchedule)) {
+            updatedSchedule = parsedResponse.updatedSchedule;
+            aiResponse = parsedResponse.explanation || "I've updated the schedule based on your constraint.";
+          } else {
+            console.warn('Response did not contain a valid updatedSchedule array:', parsedResponse);
+            aiResponse = "I understood your request, but couldn't update the schedule properly. Please try rephrasing.";
+          }
         } catch (e) {
           console.warn('Failed to parse structured response:', e);
-          // We'll fall back to text processing if JSON parsing fails
+          aiResponse = "I couldn't process your constraint properly. Please try rephrasing or being more specific.";
         }
       }
     }
@@ -126,67 +109,9 @@ Analyze the constraint and return the appropriate structured response.
       aiResponse = "I processed your constraint, but I'm not sure how to update the schedule.";
     }
 
-    // Process the constraint to update the schedule based on the structured response
-    let processedSchedule = [...currentSchedule];
-    
-    if (structuredResponse) {
-      const { action, details } = structuredResponse;
-      
-      switch (action) {
-        case 'remove_subject':
-          // Remove specified subjects
-          if (details.subjects && Array.isArray(details.subjects)) {
-            processedSchedule = processedSchedule.filter(item => 
-              !details.subjects.some(subject => 
-                item.subject.toLowerCase() === subject.toLowerCase()
-              )
-            );
-          }
-          break;
-          
-        case 'change_teacher':
-          // Update teacher for a subject
-          if (details.subject && details.teacherName) {
-            processedSchedule = processedSchedule.map(item => {
-              if (item.subject.toLowerCase() === details.subject.toLowerCase()) {
-                return { ...item, teacherName: details.teacherName };
-              }
-              return item;
-            });
-          }
-          break;
-          
-        case 'change_time':
-          // Filter schedule items based on allowed time slots
-          if (details.subject && details.allowedTimeSlots && Array.isArray(details.allowedTimeSlots)) {
-            processedSchedule = processedSchedule.filter(item => {
-              if (item.subject.toLowerCase() === details.subject.toLowerCase()) {
-                return details.allowedTimeSlots.includes(item.timeSlot);
-              }
-              return true;
-            });
-          }
-          break;
-          
-        case 'add_subject':
-          // This would require more complex logic to find available slots
-          // We would need to implement this based on the application's requirements
-          console.log('Add subject action not fully implemented yet');
-          break;
-          
-        case 'no_change':
-        default:
-          // No changes to the schedule
-          break;
-      }
-    } else {
-      // If structured response parsing failed, include a message in the response
-      aiResponse = `${aiResponse}\n\nNote: I couldn't structure my response properly. Please try rephrasing your constraint.`;
-    }
-
     return {
-      processedSchedule,
-      response: structuredResponse?.explanation || aiResponse
+      processedSchedule: updatedSchedule,
+      response: aiResponse
     };
   } catch (error) {
     console.error('Error in Gemini API processing:', error);

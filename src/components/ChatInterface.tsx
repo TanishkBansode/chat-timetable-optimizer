@@ -38,7 +38,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const exampleConstraints = [
     "No Chemistry classes",
-    "The Biology teacher's name is Prof. Johnny",
+    "Change Dr. Smith's name to Dr. Smooth",
     "Math only in the morning",
     "No classes on Friday afternoon"
   ];
