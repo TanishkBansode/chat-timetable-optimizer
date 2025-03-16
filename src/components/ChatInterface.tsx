@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Message } from '../lib/types';
 import { Send, Loader2, HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -16,12 +17,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isProcessing = false
 }) => {
   const [inputText, setInputText] = useState('');
+  const [shouldScroll, setShouldScroll] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const handleSendMessage = () => {
     if (inputText.trim() && !isProcessing) {
       onSendMessage(inputText);
       setInputText('');
+      setShouldScroll(true); // Only auto-scroll when user sends a message
     }
   };
   
@@ -31,10 +34,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
   
-  // Auto-scroll to the latest message
+  // Auto-scroll to the latest message only when shouldScroll is true
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (shouldScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setShouldScroll(false); // Reset after scrolling
+    }
+  }, [messages, shouldScroll]);
+
+  // Disable auto-scroll when user manually scrolls
+  const handleScroll = () => {
+    setShouldScroll(false);
+  };
 
   const exampleConstraints = [
     "No Chemistry classes",
@@ -45,7 +56,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2">
+      <ScrollArea className="flex-1 px-4 pt-4 pb-2" onWheel={handleScroll}>
         <div className="space-y-4">
           {messages.map((message) => (
             <div 
@@ -69,7 +80,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           
           <div ref={messagesEndRef} />
         </div>
-      </div>
+      </ScrollArea>
       
       <div className="p-4 border-t border-border">
         <div className="flex items-center space-x-2 relative">

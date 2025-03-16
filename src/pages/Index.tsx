@@ -11,7 +11,9 @@ import {
   generateId, 
   generateSampleSchedule, 
   processConstraint,
-  detectConstraintType
+  detectConstraintType,
+  TEACHERS,
+  CLASSES
 } from '../lib/timetableUtils';
 import { processConstraintWithGemini, createConstraintFromText } from '../lib/geminiApi';
 import { Calendar, MessageSquare, List, Users, BookOpen } from 'lucide-react';
