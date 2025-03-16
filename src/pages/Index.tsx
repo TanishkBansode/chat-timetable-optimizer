@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import TimetableView from '../components/TimetableView';
@@ -6,7 +5,8 @@ import ConstraintList from '../components/ConstraintList';
 import ChatInterface from '../components/ChatInterface';
 import { ApiKeySettings } from '@/components/ApiKeySettings';
 import TeacherList from '../components/TeacherList';
-import { Constraint, Message, Schedule } from '../lib/types';
+import ClassManager from '@/components/ClassManager';
+import { Constraint, Message, Schedule, Class } from '../lib/types';
 import { 
   generateId, 
   generateSampleSchedule, 
@@ -14,9 +14,10 @@ import {
   detectConstraintType
 } from '../lib/timetableUtils';
 import { processConstraintWithGemini, createConstraintFromText } from '../lib/geminiApi';
-import { Calendar, MessageSquare, List } from 'lucide-react';
+import { Calendar, MessageSquare, List, Users, BookOpen } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index: React.FC = () => {
   // State
@@ -24,6 +25,7 @@ const Index: React.FC = () => {
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'constraints' | 'chat'>('chat');
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'apiKey' | 'teachers' | 'classes'>('apiKey');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
@@ -157,7 +159,22 @@ const Index: React.FC = () => {
           
           {showSettings ? (
             <div className="bg-card p-4 rounded-lg shadow-sm">
-              <ApiKeySettings />
+              <Tabs defaultValue="apiKey" value={activeSettingsTab} onValueChange={(v) => setActiveSettingsTab(v as any)}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="apiKey">API Key</TabsTrigger>
+                  <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                  <TabsTrigger value="classes">Classes</TabsTrigger>
+                </TabsList>
+                <TabsContent value="apiKey" className="mt-4">
+                  <ApiKeySettings />
+                </TabsContent>
+                <TabsContent value="teachers" className="mt-4">
+                  <TeacherList />
+                </TabsContent>
+                <TabsContent value="classes" className="mt-4">
+                  <ClassManager />
+                </TabsContent>
+              </Tabs>
             </div>
           ) : (
             <TimetableView schedule={schedule} />
@@ -203,6 +220,38 @@ const Index: React.FC = () => {
               />
             ) : (
               <div className="p-4 h-full overflow-y-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                  <div className="bg-primary/5 p-3 rounded-lg">
+                    <h3 className="text-sm font-medium flex items-center mb-2">
+                      <Users className="h-4 w-4 mr-1 text-primary" />
+                      Teacher Quick View
+                    </h3>
+                    <div className="text-xs space-y-1 max-h-32 overflow-y-auto">
+                      {TEACHERS.map(teacher => (
+                        <div key={teacher.id} className="flex justify-between">
+                          <span>{teacher.name}</span>
+                          <span className="text-muted-foreground">{teacher.subjects.length} subjects</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-primary/5 p-3 rounded-lg">
+                    <h3 className="text-sm font-medium flex items-center mb-2">
+                      <BookOpen className="h-4 w-4 mr-1 text-primary" />
+                      Class Quick View
+                    </h3>
+                    <div className="text-xs space-y-1 max-h-32 overflow-y-auto">
+                      {CLASSES.map(cls => (
+                        <div key={cls.id} className="flex justify-between">
+                          <span>{cls.name}</span>
+                          <span className="text-muted-foreground">{cls.subjects.length} subjects</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
                 <ConstraintList 
                   constraints={constraints} 
                   onRemoveConstraint={handleRemoveConstraint} 
