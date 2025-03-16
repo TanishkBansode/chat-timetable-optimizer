@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TEACHERS, CLASSES } from '@/lib/constants';
+import { TEACHERS, CLASSES } from '@/lib/timetableUtils';
 
 const TeacherList: React.FC = () => {
   return (
