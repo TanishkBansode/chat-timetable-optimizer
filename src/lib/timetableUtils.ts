@@ -26,7 +26,7 @@ export const CLASSES: Class[] = [
   { id: '4', name: 'Class 11B', subjects: SUBJECTS.slice(0, 8) },
 ];
 
-// Sample teachers
+// Sample teachers - Ensuring Dr. Smith teaches Maths (not Mathematics)
 export const TEACHERS: Teacher[] = [
   { id: '1', name: 'Dr. Smith', subjects: ['Maths', 'Physics'] },
   { id: '2', name: 'Prof. Johnson', subjects: ['Chemistry', 'Biology'] },

@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Schedule, Day, TimeSlot, Class } from '../lib/types';
+import React, { useState, useEffect } from 'react';
+import { Schedule, Day, TimeSlot, Class, Teacher } from '../lib/types';
 import { 
   DAYS, 
   TIME_SLOTS, 
@@ -30,7 +29,12 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
   const [newClassName, setNewClassName] = useState('');
   const [currentEditClass, setCurrentEditClass] = useState<Class | null>(null);
   const [classes, setClasses] = useState<Class[]>(CLASSES);
+  const [teachers, setTeachers] = useState<Teacher[]>(TEACHERS);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setTeachers(TEACHERS);
+  }, [TEACHERS]);
 
   const handleCellHover = (day: Day, timeSlot: TimeSlot) => {
     setHoveredCell(`${day}-${timeSlot}`);
@@ -61,13 +65,11 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
       return;
     }
 
-    // Update the class name in the state
     const updatedClasses = classes.map(c => 
       c.id === currentEditClass.id ? {...c, name: editClassName} : c
     );
     setClasses(updatedClasses);
     
-    // Update the selected class if it was renamed
     if (selectedClass === currentEditClass.name) {
       setSelectedClass(editClassName);
     }
@@ -90,7 +92,6 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
       return;
     }
 
-    // Add the new class to the state
     const newClass = {
       id: Math.random().toString(36).substring(2, 9),
       name: newClassName,
@@ -208,15 +209,19 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
                         })}
                         <td className="border-b border-border p-3">
                           <div className="flex flex-col gap-1 text-xs">
-                            {/* Find relevant teachers who teach this class's subjects without repetition */}
-                            {TEACHERS
+                            {teachers
                               .filter(teacher => 
                                 teacher.subjects.some(subject => 
                                   classItem.subjects.includes(subject)
                                 )
                               )
+                              .reduce((unique, teacher) => {
+                                if (!unique.some(t => t.id === teacher.id)) {
+                                  unique.push(teacher);
+                                }
+                                return unique;
+                              }, [] as Teacher[])
                               .map(teacher => {
-                                // Get relevant subjects this teacher teaches for this class
                                 const relevantSubjects = teacher.subjects
                                   .filter(s => classItem.subjects.includes(s))
                                   .join(', ');
@@ -241,7 +246,6 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
         </Tabs>
       </div>
 
-      {/* Edit Class Sheet */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
         <SheetContent>
           <SheetHeader>
@@ -273,7 +277,6 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
         </SheetContent>
       </Sheet>
 
-      {/* Add Class Sheet */}
       <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
         <SheetContent>
           <SheetHeader>
