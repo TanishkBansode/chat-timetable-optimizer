@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Schedule, Day, TimeSlot, Class, Teacher } from '../lib/types';
 import { 
@@ -29,12 +30,14 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
   const [newClassName, setNewClassName] = useState('');
   const [currentEditClass, setCurrentEditClass] = useState<Class | null>(null);
   const [classes, setClasses] = useState<Class[]>(CLASSES);
-  const [teachers, setTeachers] = useState<Teacher[]>(TEACHERS);
+  const [teachers, setTeachers] = useState<Teacher[]>([]); // Initialize as empty
   const { toast } = useToast();
 
+  // Update teachers whenever schedule changes or on component mount
   useEffect(() => {
-    setTeachers(TEACHERS);
-  }, [TEACHERS]);
+    // Always get fresh data directly from the import
+    setTeachers([...TEACHERS]);
+  }, [schedule, TEACHERS]); // Add schedule as dependency to refresh when timetable changes
 
   const handleCellHover = (day: Day, timeSlot: TimeSlot) => {
     setHoveredCell(`${day}-${timeSlot}`);
@@ -209,6 +212,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
                         })}
                         <td className="border-b border-border p-3">
                           <div className="flex flex-col gap-1 text-xs">
+                            {/* Get teacher information based on the schedule */}
                             {teachers
                               .filter(teacher => 
                                 teacher.subjects.some(subject => 

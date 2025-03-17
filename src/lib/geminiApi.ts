@@ -1,6 +1,5 @@
-
 import { Constraint, Schedule } from './types';
-import { detectConstraintType, generateId } from './timetableUtils';
+import { detectConstraintType, generateId, TEACHERS } from './timetableUtils';
 
 const getApiKey = () => {
   return localStorage.getItem('gemini-api-key');
@@ -29,6 +28,9 @@ You are a school timetable assistant. Analyze this constraint: "${constraintText
 Current schedule:
 ${JSON.stringify(currentSchedule, null, 2)}
 
+Current teachers:
+${JSON.stringify(TEACHERS, null, 2)}
+
 Please return a JSON response with:
 1. An "explanation" of what changes you'll make
 2. The complete "updatedSchedule" array with all necessary modifications applied
@@ -38,6 +40,8 @@ Your response should be a valid JSON object containing both these fields. The "u
 For example, if asked to change a teacher's name, update all relevant entries in the schedule.
 If asked to remove a subject, filter out those entries.
 If asked to change time slots, move the relevant entries to appropriate time slots.
+
+If the constraint mentions a teacher change, make sure to update all entries in the schedule where that teacher is mentioned.
 
 Return the complete modified schedule as a JSON array. Don't just describe the changes - actually make them.
 `;

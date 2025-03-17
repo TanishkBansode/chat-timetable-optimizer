@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import TimetableView from '../components/TimetableView';
@@ -89,6 +90,19 @@ const Index: React.FC = () => {
         title: "Constraint processed",
         description: "Your timetable has been updated.",
       });
+      
+      // Force a refresh of the teachers list by re-rendering the component
+      // This ensures that the teachers column in the timetable gets updated
+      if (text.toLowerCase().includes('teacher') || 
+          text.toLowerCase().includes('dr.') || 
+          text.toLowerCase().includes('prof.') || 
+          text.toLowerCase().includes('mr.') || 
+          text.toLowerCase().includes('mrs.') || 
+          text.toLowerCase().includes('ms.')) {
+        // Using a forceUpdate-like pattern
+        setSchedule([...processedSchedule]);
+      }
+      
     } catch (error) {
       console.error('Error processing constraint:', error);
       
