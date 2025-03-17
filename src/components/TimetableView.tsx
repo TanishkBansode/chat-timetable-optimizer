@@ -29,6 +29,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
   const [editClassName, setEditClassName] = useState('');
   const [newClassName, setNewClassName] = useState('');
   const [currentEditClass, setCurrentEditClass] = useState<Class | null>(null);
+  const [classes, setClasses] = useState<Class[]>(CLASSES);
   const { toast } = useToast();
 
   const handleCellHover = (day: Day, timeSlot: TimeSlot) => {
@@ -60,8 +61,17 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
       return;
     }
 
-    // In a real app, this would update the class in a database or state
-    // For now we'll just show a toast
+    // Update the class name in the state
+    const updatedClasses = classes.map(c => 
+      c.id === currentEditClass.id ? {...c, name: editClassName} : c
+    );
+    setClasses(updatedClasses);
+    
+    // Update the selected class if it was renamed
+    if (selectedClass === currentEditClass.name) {
+      setSelectedClass(editClassName);
+    }
+    
     toast({
       title: "Class updated",
       description: `Class renamed from ${currentEditClass.name} to ${editClassName}`
@@ -80,8 +90,17 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
       return;
     }
 
-    // In a real app, this would add the class to a database or state
-    // For now we'll just show a toast
+    // Add the new class to the state
+    const newClass = {
+      id: Math.random().toString(36).substring(2, 9),
+      name: newClassName,
+      subjects: CLASSES[0].subjects.slice() // Copy subjects from first class
+    };
+    
+    const updatedClasses = [...classes, newClass];
+    setClasses(updatedClasses);
+    setSelectedClass(newClassName); // Switch to the new class
+    
     toast({
       title: "Class added",
       description: `New class ${newClassName} added`
@@ -93,14 +112,13 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
   return (
     <div className="w-full overflow-auto pb-4 animate-scale-in">
       <div className="flex items-center justify-between mb-4">
-        <Tabs defaultValue={CLASSES[0].name} className="w-full">
+        <Tabs defaultValue={classes[0].name} value={selectedClass} onValueChange={setSelectedClass} className="w-full">
           <div className="flex items-center justify-between mb-2">
             <TabsList className="justify-start">
-              {CLASSES.map((classItem) => (
+              {classes.map((classItem) => (
                 <TabsTrigger 
                   key={classItem.id} 
                   value={classItem.name}
-                  onClick={() => setSelectedClass(classItem.name)}
                 >
                   {classItem.name}
                 </TabsTrigger>
@@ -110,7 +128,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => handleEditClass(CLASSES.find(c => c.name === selectedClass) || CLASSES[0])}
+                onClick={() => handleEditClass(classes.find(c => c.name === selectedClass) || classes[0])}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -124,7 +142,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
             </div>
           </div>
           
-          {CLASSES.map((classItem) => (
+          {classes.map((classItem) => (
             <TabsContent key={classItem.id} value={classItem.name} className="mt-4">
               <div className="min-w-[800px] glass-panel rounded-xl overflow-hidden">
                 <table className="w-full border-collapse">
@@ -190,18 +208,27 @@ const TimetableView: React.FC<TimetableViewProps> = ({ schedule }) => {
                         })}
                         <td className="border-b border-border p-3">
                           <div className="flex flex-col gap-1 text-xs">
-                            {TEACHERS.filter(teacher => 
-                              teacher.subjects.some(subject => 
-                                classItem.subjects.includes(subject)
+                            {/* Find relevant teachers who teach this class's subjects without repetition */}
+                            {TEACHERS
+                              .filter(teacher => 
+                                teacher.subjects.some(subject => 
+                                  classItem.subjects.includes(subject)
+                                )
                               )
-                            ).map(teacher => (
-                              <div key={teacher.id} className="flex items-center justify-between">
-                                <span>{teacher.name}</span>
-                                <span className="text-muted-foreground">{
-                                  teacher.subjects.filter(s => classItem.subjects.includes(s)).join(', ')
-                                }</span>
-                              </div>
-                            ))}
+                              .map(teacher => {
+                                // Get relevant subjects this teacher teaches for this class
+                                const relevantSubjects = teacher.subjects
+                                  .filter(s => classItem.subjects.includes(s))
+                                  .join(', ');
+                                
+                                return (
+                                  <div key={teacher.id} className="flex items-center justify-between">
+                                    <span>{teacher.name}</span>
+                                    <span className="text-muted-foreground">{relevantSubjects}</span>
+                                  </div>
+                                );
+                              })
+                            }
                           </div>
                         </td>
                       </tr>

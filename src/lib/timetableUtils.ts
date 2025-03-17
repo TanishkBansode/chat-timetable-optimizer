@@ -1,3 +1,4 @@
+
 import { Constraint, Schedule, ScheduleItem, Day, TimeSlot, Class, Teacher } from './types';
 
 // Constants that were previously in constants.ts
@@ -5,7 +6,7 @@ export const DAYS: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export const TIME_SLOTS: TimeSlot[] = ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
 export const SUBJECTS = [
-  'Mathematics', 
+  'Maths', 
   'Physics', 
   'Chemistry', 
   'Biology', 
@@ -27,7 +28,7 @@ export const CLASSES: Class[] = [
 
 // Sample teachers
 export const TEACHERS: Teacher[] = [
-  { id: '1', name: 'Dr. Smith', subjects: ['Mathematics', 'Physics'] },
+  { id: '1', name: 'Dr. Smith', subjects: ['Maths', 'Physics'] },
   { id: '2', name: 'Prof. Johnson', subjects: ['Chemistry', 'Biology'] },
   { id: '3', name: 'Mr. Brown', subjects: ['History', 'Literature'] },
   { id: '4', name: 'Ms. Davis', subjects: ['Computer Science'] },
@@ -36,7 +37,7 @@ export const TEACHERS: Teacher[] = [
 
 // Colors for subjects (pastel colors)
 export const SUBJECT_COLORS: Record<string, string> = {
-  'Mathematics': 'rgba(114, 190, 229, 0.8)',
+  'Maths': 'rgba(114, 190, 229, 0.8)',
   'Physics': 'rgba(245, 171, 112, 0.8)',
   'Chemistry': 'rgba(149, 186, 131, 0.8)',
   'Biology': 'rgba(196, 159, 204, 0.8)',

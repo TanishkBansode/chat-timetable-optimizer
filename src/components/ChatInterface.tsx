@@ -18,13 +18,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [shouldScroll, setShouldScroll] = useState(true);
+  const [userScrolled, setUserScrolled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const handleSendMessage = () => {
     if (inputText.trim() && !isProcessing) {
       onSendMessage(inputText);
       setInputText('');
-      setShouldScroll(true); // Only auto-scroll when user sends a message
+      setShouldScroll(true); 
+      setUserScrolled(false); // Reset user scroll state when sending a new message
     }
   };
   
@@ -35,17 +37,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
   
   // Auto-scroll to the latest message only when shouldScroll is true
+  // and the user hasn't manually scrolled up
   useEffect(() => {
-    if (shouldScroll) {
+    if (shouldScroll && !userScrolled) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      setShouldScroll(false); // Reset after scrolling
+      setShouldScroll(false);
     }
-  }, [messages, shouldScroll]);
+  }, [messages, shouldScroll, userScrolled]);
 
-  // Disable auto-scroll when user manually scrolls
+  // Handle wheel events to detect when user manually scrolls
   const handleScroll = () => {
+    setUserScrolled(true);
     setShouldScroll(false);
   };
+
+  // When a new message comes in from the system and user hasn't scrolled
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.sender === 'system' && !userScrolled) {
+      setShouldScroll(true);
+    }
+  }, [messages, userScrolled]);
 
   const exampleConstraints = [
     "No Chemistry classes",
